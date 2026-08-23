@@ -1,0 +1,6 @@
+aws_region      = "us-east-1"
+project_name    = "franquicias-api"
+db_name         = "franquicias"
+db_username     = "franquicias"
+db_password     = "CHANGE_ME_use_a_real_secret"
+container_image = ""
