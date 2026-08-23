@@ -34,7 +34,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ServerWebInputException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleBadInput(ServerWebInputException ex, ServerWebExchange exchange) {
-        return build(HttpStatus.BAD_REQUEST, ex.getReason(), exchange);
+        String message = ex.getReason() != null ? ex.getReason() : "Solicitud inválida";
+        return build(HttpStatus.BAD_REQUEST, message, exchange);
     }
 
     @ExceptionHandler(Exception.class)
