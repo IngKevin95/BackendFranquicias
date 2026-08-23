@@ -83,4 +83,37 @@ class ProductoControllerTest extends AbstractIntegrationTest {
             .exchange()
             .expectStatus().isBadRequest();
     }
+
+    @Test
+    void retornaElProductoConMasStockPorCadaSucursal() {
+        Sucursal sedeSur = sucursalService.agregar(franquicia.id(), "Sede Sur").block();
+
+        webTestClient.post().uri(basePath())
+            .bodyValue(new CrearProductoRequest("Manzana", 10))
+            .exchange().expectStatus().isCreated();
+        webTestClient.post().uri(basePath())
+            .bodyValue(new CrearProductoRequest("Pera", 25))
+            .exchange().expectStatus().isCreated();
+        webTestClient.post()
+            .uri("/api/v1/franquicias/" + franquicia.id() + "/sucursales/" + sedeSur.id() + "/productos")
+            .bodyValue(new CrearProductoRequest("Uva", 5))
+            .exchange().expectStatus().isCreated();
+
+        webTestClient.get().uri("/api/v1/franquicias/" + franquicia.id() + "/productos/max-stock")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBodyList(com.franquicias.infrastructure.web.dto.ProductoMaxStockResponse.class)
+            .value(list -> {
+                assertThat(list).hasSize(2);
+                assertThat(list).extracting(r -> r.producto().nombre())
+                    .containsExactlyInAnyOrder("Pera", "Uva");
+            });
+    }
+
+    @Test
+    void retorna404AlPedirMaxStockDeFranquiciaInexistente() {
+        webTestClient.get().uri("/api/v1/franquicias/" + java.util.UUID.randomUUID() + "/productos/max-stock")
+            .exchange()
+            .expectStatus().isNotFound();
+    }
 }

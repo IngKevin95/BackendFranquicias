@@ -28,3 +28,6 @@ replay_pid*
 
 # Local env overrides
 .env
+
+# Local project instructions (not committed, no trace in history)
+/CLAUDE.md
