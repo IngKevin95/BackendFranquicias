@@ -68,6 +68,7 @@ resource "aws_db_subnet_group" "this" {
   subnet_ids = data.aws_subnets.default.ids
 }
 
+# Se recomienda usar AWS Secrets Manager para el password en produccion
 resource "aws_db_instance" "postgres" {
   identifier             = "${var.project_name}-db"
   engine                 = "postgres"
@@ -83,6 +84,12 @@ resource "aws_db_instance" "postgres" {
   publicly_accessible    = false
 }
 
+resource "aws_ssm_parameter" "db_password" {
+  name  = "/${var.project_name}/db_password"
+  type  = "SecureString"
+  value = var.db_password
+}
+
 resource "aws_ecr_repository" "app" {
   name                 = var.project_name
   image_tag_mutability = "MUTABLE"
@@ -90,6 +97,11 @@ resource "aws_ecr_repository" "app" {
 
 resource "aws_ecs_cluster" "this" {
   name = "${var.project_name}-cluster"
+}
+
+resource "aws_cloudwatch_log_group" "ecs_logs" {
+  name              = "/ecs/${var.project_name}"
+  retention_in_days = 7
 }
 
 resource "aws_iam_role" "ecs_execution" {
@@ -109,6 +121,19 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+resource "aws_iam_role_policy" "ecs_execution_secrets" {
+  name   = "${var.project_name}-ecs-secrets"
+  role   = aws_iam_role.ecs_execution.name
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = ["ssm:GetParameters", "ssm:GetParameter"]
+      Effect   = "Allow"
+      Resource = [aws_ssm_parameter.db_password.arn]
+    }]
+  })
+}
+
 resource "aws_ecs_task_definition" "app" {
   family                   = "${var.project_name}-task"
   requires_compatibilities = ["FARGATE"]
@@ -126,8 +151,18 @@ resource "aws_ecs_task_definition" "app" {
       { name = "DB_PORT", value = "5432" },
       { name = "DB_NAME", value = var.db_name },
       { name = "DB_USER", value = var.db_username },
-      { name = "DB_PASSWORD", value = var.db_password },
     ]
+    secrets = [
+      { name = "DB_PASSWORD", valueFrom = aws_ssm_parameter.db_password.arn }
+    ]
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        "awslogs-group"         = aws_cloudwatch_log_group.ecs_logs.name
+        "awslogs-region"        = var.aws_region
+        "awslogs-stream-prefix" = "ecs"
+      }
+    }
   }])
 }
 
