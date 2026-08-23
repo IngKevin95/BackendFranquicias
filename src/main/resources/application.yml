@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: franquicias-api
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:franquicias}
+    username: ${DB_USER:franquicias}
+    password: ${DB_PASSWORD:franquicias}
+  flyway:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:franquicias}
+    user: ${DB_USER:franquicias}
+    password: ${DB_PASSWORD:franquicias}
+    locations: classpath:db/migration
+
+server:
+  port: ${SERVER_PORT:8080}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
