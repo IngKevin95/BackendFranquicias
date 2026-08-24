@@ -1,0 +1,133 @@
+@baseUrl = http://localhost:8089/api/v1
+
+### ==========================================
+### INSTRUCCIONES: Reemplaza manualmente los IDs 
+### o ejecuta el script test.ps1 / test.sh
+### ==========================================
+@fId = 482e0ee1-a54f-4d42-b064-adeca47b41d6
+@sId = 51afb3a2-4608-4e63-ad64-7c86a386778d
+@pId = 517f6129-bcf1-415f-99d2-ece0fda1e34d
+
+### ==========================================
+### 1. FRANQUICIAS
+### ==========================================
+
+### Crear Franquicia
+POST {{baseUrl}}/franquicias
+Content-Type: application/json
+
+{
+  "nombre": "McDonalds"
+}
+
+### Renombrar Franquicia
+PATCH {{baseUrl}}/franquicias/{{fId}}
+Content-Type: application/json
+
+{
+  "nombre": "Global King"
+}
+
+
+### ==========================================
+### 2. SUCURSALES
+### ==========================================
+
+### Agregar Sucursal (Sede Norte)
+POST {{baseUrl}}/franquicias/{{fId}}/sucursales
+Content-Type: application/json
+
+{
+  "nombre": "Sede Este"
+}
+
+### Renombrar Sucursal
+PATCH {{baseUrl}}/franquicias/{{fId}}/sucursales/{{sId}}
+Content-Type: application/json
+
+{
+  "nombre": "Sede Norte Actualizada"
+}
+
+
+### ==========================================
+### 3. PRODUCTOS
+### ==========================================
+
+### Agregar Producto A (Hamburguesa)
+POST {{baseUrl}}/franquicias/{{fId}}/sucursales/{{sId}}/productos
+Content-Type: application/json
+
+{
+  "nombre": "Hamburguesa Tocineta"
+}
+
+### Renombrar Producto A
+PATCH {{baseUrl}}/franquicias/{{fId}}/sucursales/{{sId}}/productos/{{pId}}
+Content-Type: application/json
+
+{
+  "nombre": "Hamburguesa Doble Tocineta"
+}
+
+
+### ==========================================
+### 4. KARDEX Y MANEJO DE INVENTARIO
+### ==========================================
+
+### Kardex: Modificar Stock (ENTRADA)
+PATCH {{baseUrl}}/franquicias/{{fId}}/sucursales/{{sId}}/productos/{{pId}}/stock
+Content-Type: application/json
+
+{
+  "tipo": "ENTRADA",
+  "cantidad": 20
+}
+
+### Kardex: Modificar Stock (SALIDA)
+PATCH {{baseUrl}}/franquicias/{{fId}}/sucursales/{{sId}}/productos/{{pId}}/stock
+Content-Type: application/json
+
+{
+  "tipo": "SALIDA",
+  "cantidad": 5
+}
+
+### Kardex: ERROR (Debe dar 400 Bad Request por stock insuficiente)
+PATCH {{baseUrl}}/franquicias/{{fId}}/sucursales/{{sId}}/productos/{{pId}}/stock
+Content-Type: application/json
+
+{
+  "tipo": "SALIDA",
+  "cantidad": 9999
+}
+
+
+### ==========================================
+### 5. MAX STOCK Y CACHÉ (REDIS)
+### ==========================================
+
+### Consulta Paginada de Max Stock
+GET {{baseUrl}}/franquicias/{{fId}}/productos/max-stock?limit=10&offset=0
+
+
+### ==========================================
+### 6. SEGURIDAD Y SEMÁNTICA REST (409 CONFLICT)
+### ==========================================
+
+### Test Error de Relación (409 Conflict)
+@fakeFId = 11111111-1111-1111-1111-111111111111
+PATCH {{baseUrl}}/franquicias/{{fakeFId}}/sucursales/{{sId}}/productos/{{pId}}
+Content-Type: application/json
+
+{
+  "nombre": "Producto Hackeado"
+}
+
+
+### ==========================================
+### 7. ELIMINACIÓN
+### ==========================================
+
+### Eliminar Producto 
+DELETE {{baseUrl}}/franquicias/{{fId}}/sucursales/{{sId}}/productos/{{pId}}

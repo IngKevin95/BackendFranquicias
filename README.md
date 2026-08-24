@@ -41,6 +41,12 @@ mvn verify
 
 Los tests de integración usan Testcontainers (requieren Docker disponible).
 
+## Funcionalidades Avanzadas
+
+- **Caché Distribuida:** Uso de Redis Reactivo para cachear la respuesta pesada de `max-stock`. La caché se invalida automáticamente si ocurre una modificación de inventario.
+- **Kardex y Atomicidad:** Las modificaciones de stock generan un registro histórico inmutable (ENTRADA/SALIDA) y las actualizaciones de inventario se resuelven nativamente en la base de datos (previniendo *race conditions* concurrentes).
+- **Paginación:** Endpoint de reportes soporta `limit` y `offset`.
+
 ## Endpoints principales
 
 | Método | Path | Descripción |
@@ -51,9 +57,9 @@ Los tests de integración usan Testcontainers (requieren Docker disponible).
 | PATCH | `/api/v1/franquicias/{fId}/sucursales/{sId}` | Renombrar sucursal |
 | POST | `/api/v1/franquicias/{fId}/sucursales/{sId}/productos` | Agregar producto |
 | DELETE | `/api/v1/franquicias/{fId}/sucursales/{sId}/productos/{pId}` | Eliminar producto |
-| PATCH | `/api/v1/franquicias/{fId}/sucursales/{sId}/productos/{pId}/stock` | Modificar stock |
+| PATCH | `/api/v1/franquicias/{fId}/sucursales/{sId}/productos/{pId}/stock` | Modificar stock (recibe JSON con `tipo` ENTRADA/SALIDA y `cantidad`) |
 | PATCH | `/api/v1/franquicias/{fId}/sucursales/{sId}/productos/{pId}` | Renombrar producto |
-| GET | `/api/v1/franquicias/{fId}/productos/max-stock` | Producto con más stock por sucursal |
+| GET | `/api/v1/franquicias/{fId}/productos/max-stock?limit=10&offset=0` | Producto con más stock por sucursal (paginado) |
 
 Ejemplo:
 
