@@ -62,4 +62,27 @@ class SucursalControllerTest extends AbstractIntegrationTest {
             .exchange()
             .expectStatus().isNotFound();
     }
+
+    @Test
+    void listaLasSucursalesDeUnaFranquicia() {
+        Franquicia franquicia = franquiciaService.crear("Frutería Don Pepe").block();
+        webTestClient.post().uri("/api/v1/franquicias/" + franquicia.id() + "/sucursales")
+            .bodyValue(new NombreRequest("Sede Norte")).exchange().expectStatus().isCreated();
+        webTestClient.post().uri("/api/v1/franquicias/" + franquicia.id() + "/sucursales")
+            .bodyValue(new NombreRequest("Sede Sur")).exchange().expectStatus().isCreated();
+
+        webTestClient.get().uri("/api/v1/franquicias/" + franquicia.id() + "/sucursales")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBodyList(SucursalResponse.class)
+            .value(list -> assertThat(list).extracting(SucursalResponse::nombre)
+                .containsExactlyInAnyOrder("Sede Norte", "Sede Sur"));
+    }
+
+    @Test
+    void retorna404AlListarSucursalesDeFranquiciaInexistente() {
+        webTestClient.get().uri("/api/v1/franquicias/" + java.util.UUID.randomUUID() + "/sucursales")
+            .exchange()
+            .expectStatus().isNotFound();
+    }
 }

@@ -64,4 +64,43 @@ class FranquiciaControllerTest extends AbstractIntegrationTest {
             .exchange()
             .expectStatus().isBadRequest();
     }
+
+    @Test
+    void listaTodasLasFranquiciasCreadas() {
+        webTestClient.post().uri("/api/v1/franquicias")
+            .bodyValue(new NombreRequest("Frutería Don Pepe"))
+            .exchange().expectStatus().isCreated();
+        webTestClient.post().uri("/api/v1/franquicias")
+            .bodyValue(new NombreRequest("Panadería La Espiga"))
+            .exchange().expectStatus().isCreated();
+
+        webTestClient.get().uri("/api/v1/franquicias")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBodyList(FranquiciaResponse.class)
+            .value(list -> assertThat(list).extracting(FranquiciaResponse::nombre)
+                .contains("Frutería Don Pepe", "Panadería La Espiga"));
+    }
+
+    @Test
+    void obtieneUnaFranquiciaPorId() {
+        FranquiciaResponse creada = webTestClient.post().uri("/api/v1/franquicias")
+            .bodyValue(new NombreRequest("Frutería Don Pepe"))
+            .exchange()
+            .expectBody(FranquiciaResponse.class)
+            .returnResult().getResponseBody();
+
+        webTestClient.get().uri("/api/v1/franquicias/" + creada.id())
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(FranquiciaResponse.class)
+            .value(f -> assertThat(f.nombre()).isEqualTo("Frutería Don Pepe"));
+    }
+
+    @Test
+    void retorna404AlObtenerFranquiciaInexistente() {
+        webTestClient.get().uri("/api/v1/franquicias/" + UUID.randomUUID())
+            .exchange()
+            .expectStatus().isNotFound();
+    }
 }

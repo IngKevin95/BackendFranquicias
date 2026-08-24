@@ -6,6 +6,7 @@ import com.franquicias.infrastructure.persistence.mapper.FranquiciaMapper;
 import com.franquicias.infrastructure.persistence.repository.FranquiciaR2dbcRepository;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -41,5 +42,10 @@ public class FranquiciaRepositoryAdapter implements FranquiciaRepositoryPort {
             .fetch()
             .rowsUpdated()
             .then();
+    }
+
+    @Override
+    public Flux<Franquicia> findAll() {
+        return repository.findAll().map(mapper::toDomain);
     }
 }
