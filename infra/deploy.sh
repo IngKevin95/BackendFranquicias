@@ -1,10 +1,19 @@
 #!/bin/bash
 # Redeploy manual sin recrear la instancia: git pull + rebuild + restart del contenedor app.
-# Correr DESDE la EC2 (ssh ec2-user@<ip>, luego: sudo /opt/app/infra/deploy.sh)
+# Correr DESDE la EC2 (ssh ec2-user@<ip>, luego: sudo /opt/app/infra/deploy.sh [branch])
+# Sin argumento, actualiza la rama actual. Con argumento, cambia a esa rama primero
+# (usado por el workflow de CI, que deploya la rama del PR antes de mergear a main).
 set -euo pipefail
 cd /opt/app
 
-git pull
+BRANCH="${1:-}"
+if [ -n "$BRANCH" ]; then
+  git fetch origin "$BRANCH"
+  git checkout "$BRANCH"
+  git reset --hard "origin/$BRANCH"
+else
+  git pull
+fi
 
 docker build -t franquicias-api:latest .
 
