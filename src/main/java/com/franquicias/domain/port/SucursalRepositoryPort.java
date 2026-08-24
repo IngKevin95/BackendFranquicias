@@ -7,4 +7,5 @@ import reactor.core.publisher.Mono;
 public interface SucursalRepositoryPort {
     Mono<Sucursal> save(Sucursal sucursal);
     Mono<Sucursal> findById(UUID id);
+    Mono<Void> updateNombre(UUID id, String nombre);
 }

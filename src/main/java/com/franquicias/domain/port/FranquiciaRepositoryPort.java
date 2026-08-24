@@ -7,4 +7,5 @@ import reactor.core.publisher.Mono;
 public interface FranquiciaRepositoryPort {
     Mono<Franquicia> save(Franquicia franquicia);
     Mono<Franquicia> findById(UUID id);
+    Mono<Void> updateNombre(UUID id, String nombre);
 }
