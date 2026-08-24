@@ -16,7 +16,7 @@ CREATE TABLE usuario (
 INSERT INTO usuario (username, password_hash, email, role)
 VALUES (
     'admin',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    '$2b$10$ySC.bb/zB2Jm6765sq1Y6O3xXKPeBJ4tbOMIMD/fO9vgjuVfaFBxe',
     'admin@franquicias.com',
     'ADMIN'
 );
