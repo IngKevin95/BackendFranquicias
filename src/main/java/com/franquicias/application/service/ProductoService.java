@@ -79,7 +79,7 @@ public class ProductoService {
         
         return redisTemplate.opsForList().range(cacheKey, 0, -1)
             .cast(ProductoMaxStock.class)
-            .switchIfEmpty(
+            .switchIfEmpty(Flux.defer(() -> 
                 franquiciaPort.findById(franquiciaId)
                     .switchIfEmpty(Mono.error(new FranquiciaNotFoundException(franquiciaId)))
                     .flatMapMany(franquicia -> productoPort.findMaxStockPorFranquicia(franquiciaId, limit, offset))
@@ -92,13 +92,15 @@ public class ProductoService {
                         }
                         return Flux.empty();
                     })
-            );
+            ));
     }
     
     private Mono<Void> invalidarCacheMaxStock(UUID franquiciaId) {
-        return redisTemplate.keys("max-stock:franquicia:" + franquiciaId + "*")
-            .flatMap(redisTemplate::delete)
-            .then();
+        return Mono.defer(() -> 
+            redisTemplate.keys("max-stock:franquicia:" + franquiciaId + "*")
+                .flatMap(redisTemplate::delete)
+                .then()
+        );
     }
 
     private Mono<Sucursal> sucursalDeFranquicia(UUID franquiciaId, UUID sucursalId) {
