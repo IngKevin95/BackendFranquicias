@@ -23,6 +23,6 @@ public class FranquiciaService {
     public Mono<Franquicia> renombrar(UUID id, String nuevoNombre) {
         return port.findById(id)
             .switchIfEmpty(Mono.error(new FranquiciaNotFoundException(id)))
-            .flatMap(existing -> port.save(new Franquicia(existing.id(), nuevoNombre)));
+            .flatMap(existing -> port.updateNombre(id, nuevoNombre).then(port.findById(id)));
     }
 }
