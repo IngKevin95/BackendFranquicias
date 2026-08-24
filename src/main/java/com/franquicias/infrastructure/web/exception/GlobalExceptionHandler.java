@@ -1,5 +1,6 @@
 package com.franquicias.infrastructure.web.exception;
 
+import com.franquicias.domain.exception.ConflictoRelacionException;
 import com.franquicias.domain.exception.FranquiciaNotFoundException;
 import com.franquicias.domain.exception.ProductoNotFoundException;
 import com.franquicias.domain.exception.SucursalNotFoundException;
@@ -29,6 +30,12 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), exchange);
     }
 
+    @ExceptionHandler(ConflictoRelacionException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleConflicto(ConflictoRelacionException ex, ServerWebExchange exchange) {
+        log.warn("Conflicto en la relación de recursos: {}", ex.getMessage());
+        return build(HttpStatus.CONFLICT, ex.getMessage(), exchange);
+    }
+
     @ExceptionHandler(WebExchangeBindException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleValidation(WebExchangeBindException ex, ServerWebExchange exchange) {
         String message = ex.getBindingResult().getFieldErrors().stream()
@@ -50,6 +57,12 @@ public class GlobalExceptionHandler {
     public Mono<ResponseEntity<ErrorResponse>> handleResponseStatus(ResponseStatusException ex, ServerWebExchange exchange) {
         log.warn("Error HTTP {}: {}", ex.getStatusCode(), ex.getReason());
         return build(HttpStatus.valueOf(ex.getStatusCode().value()), ex.getReason() != null ? ex.getReason() : ex.getMessage(), exchange);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleIllegalArgument(IllegalArgumentException ex, ServerWebExchange exchange) {
+        log.warn("Argumento inválido: {}", ex.getMessage());
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), exchange);
     }
 
     @ExceptionHandler(Exception.class)
