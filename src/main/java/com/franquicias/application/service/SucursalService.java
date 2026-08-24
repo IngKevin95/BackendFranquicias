@@ -1,5 +1,6 @@
 package com.franquicias.application.service;
 
+import com.franquicias.domain.exception.ConflictoRelacionException;
 import com.franquicias.domain.exception.FranquiciaNotFoundException;
 import com.franquicias.domain.exception.SucursalNotFoundException;
 import com.franquicias.domain.model.Sucursal;
@@ -29,8 +30,11 @@ public class SucursalService {
     public Mono<Sucursal> renombrar(UUID franquiciaId, UUID sucursalId, String nuevoNombre) {
         return sucursalPort.findById(sucursalId)
             .switchIfEmpty(Mono.error(new SucursalNotFoundException(sucursalId)))
-            .filter(sucursal -> sucursal.franquiciaId().equals(franquiciaId))
-            .switchIfEmpty(Mono.error(new SucursalNotFoundException(sucursalId)))
-            .flatMap(sucursal -> sucursalPort.save(new Sucursal(sucursal.id(), sucursal.franquiciaId(), nuevoNombre)));
+            .flatMap(sucursal -> {
+                if (!sucursal.franquiciaId().equals(franquiciaId)) {
+                    return Mono.error(new ConflictoRelacionException("La sucursal no pertenece a esta franquicia"));
+                }
+                return sucursalPort.updateNombre(sucursalId, nuevoNombre).then(sucursalPort.findById(sucursalId));
+            });
     }
 }
