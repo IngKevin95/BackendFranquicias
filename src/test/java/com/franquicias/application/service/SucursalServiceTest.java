@@ -60,7 +60,7 @@ class SucursalServiceTest {
             .thenReturn(Mono.just(new Sucursal(sucursalId, otraFranquiciaId, "Sede Norte")));
 
         StepVerifier.create(service.renombrar(franquiciaId, sucursalId, "Nuevo nombre"))
-            .expectError(SucursalNotFoundException.class)
+            .expectError(com.franquicias.domain.exception.ConflictoRelacionException.class)
             .verify();
     }
 }
