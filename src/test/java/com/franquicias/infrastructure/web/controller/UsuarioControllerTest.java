@@ -59,4 +59,45 @@ class UsuarioControllerTest extends AbstractIntegrationTest {
             .exchange()
             .expectStatus().isForbidden();
     }
+
+    @Test
+    void listarUsuarios_conAdmin_returns200() {
+        webTestClient.post().uri("/api/v1/usuarios")
+            .header("Authorization", "Bearer " + adminToken)
+            .bodyValue(new RegisterRequest("listado1", "pass123", "listado1@test.com", RolUsuario.READ))
+            .exchange()
+            .expectStatus().isCreated();
+
+        webTestClient.get().uri("/api/v1/usuarios")
+            .header("Authorization", "Bearer " + adminToken)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBodyList(com.franquicias.infrastructure.web.dto.UsuarioResponse.class)
+            .value(list -> org.assertj.core.api.Assertions.assertThat(list)
+                .extracting(com.franquicias.infrastructure.web.dto.UsuarioResponse::username)
+                .contains("listado1"));
+    }
+
+    @Test
+    void listarUsuarios_conWrite_returns403() {
+        webTestClient.get().uri("/api/v1/usuarios")
+            .header("Authorization", "Bearer " + writeToken)
+            .exchange()
+            .expectStatus().isForbidden();
+    }
+
+    @Test
+    void listarUsuarios_conRead_returns403() {
+        webTestClient.get().uri("/api/v1/usuarios")
+            .header("Authorization", "Bearer " + readToken)
+            .exchange()
+            .expectStatus().isForbidden();
+    }
+
+    @Test
+    void listarUsuarios_sinToken_returns401() {
+        webTestClient.get().uri("/api/v1/usuarios")
+            .exchange()
+            .expectStatus().isUnauthorized();
+    }
 }

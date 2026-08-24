@@ -11,11 +11,13 @@ import jakarta.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -49,5 +51,11 @@ public class UsuarioController {
                 }
                 return Mono.error(e);
             });
+    }
+
+    @GetMapping("/api/v1/usuarios")
+    @Operation(summary = "Listar Usuarios", description = "Lista todos los usuarios del sistema. Solo accesible para usuarios con rol ADMIN.")
+    public Flux<UsuarioResponse> listar() {
+        return usuarioPort.findAll().map(UsuarioResponse::from);
     }
 }

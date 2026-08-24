@@ -9,12 +9,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -39,5 +41,17 @@ public class FranquiciaController {
     @Operation(summary = "Renombrar Franquicia", description = "Actualiza el nombre de una franquicia existente.")
     public Mono<FranquiciaResponse> renombrar(@PathVariable UUID id, @Valid @RequestBody NombreRequest request) {
         return service.renombrar(id, request.nombre()).map(FranquiciaResponse::from);
+    }
+
+    @GetMapping("/api/v1/franquicias")
+    @Operation(summary = "Listar Franquicias", description = "Lista todas las franquicias registradas.")
+    public Flux<FranquiciaResponse> listar() {
+        return service.listar().map(FranquiciaResponse::from);
+    }
+
+    @GetMapping("/api/v1/franquicias/{id}")
+    @Operation(summary = "Obtener Franquicia", description = "Retorna el detalle de una franquicia por su id.")
+    public Mono<FranquiciaResponse> obtener(@PathVariable UUID id) {
+        return service.obtener(id).map(FranquiciaResponse::from);
     }
 }

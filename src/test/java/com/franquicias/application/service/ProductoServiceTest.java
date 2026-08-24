@@ -14,9 +14,11 @@ import com.franquicias.domain.model.Franquicia;
 import com.franquicias.domain.model.Producto;
 import com.franquicias.domain.model.ProductoMaxStock;
 import com.franquicias.domain.model.Sucursal;
+import com.franquicias.domain.model.TransaccionStock;
 import com.franquicias.domain.port.FranquiciaRepositoryPort;
 import com.franquicias.domain.port.ProductoRepositoryPort;
 import com.franquicias.domain.port.SucursalRepositoryPort;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -158,6 +160,79 @@ class ProductoServiceTest {
         StepVerifier.create(service.renombrar(FRANQUICIA_ID, SUCURSAL_ID, productoId, "Pera"))
             .expectNextMatches(p -> p.nombre().equals("Pera"))
             .verifyComplete();
+    }
+
+    @Test
+    void listaProductosDeUnaSucursalExistente() {
+        when(sucursalPort.findById(SUCURSAL_ID))
+            .thenReturn(Mono.just(new Sucursal(SUCURSAL_ID, FRANQUICIA_ID, "Sede Norte")));
+        Producto p1 = new Producto(UUID.randomUUID(), SUCURSAL_ID, "Manzana", 10);
+        Producto p2 = new Producto(UUID.randomUUID(), SUCURSAL_ID, "Pera", 25);
+        when(productoPort.findBySucursalId(SUCURSAL_ID)).thenReturn(Flux.just(p1, p2));
+
+        StepVerifier.create(service.listarPorSucursal(FRANQUICIA_ID, SUCURSAL_ID))
+            .expectNext(p1)
+            .expectNext(p2)
+            .verifyComplete();
+    }
+
+    @Test
+    void falloAlListarProductosDeSucursalDeOtraFranquicia() {
+        UUID otraFranquiciaId = UUID.randomUUID();
+        when(sucursalPort.findById(SUCURSAL_ID))
+            .thenReturn(Mono.just(new Sucursal(SUCURSAL_ID, otraFranquiciaId, "Sede Norte")));
+
+        StepVerifier.create(service.listarPorSucursal(FRANQUICIA_ID, SUCURSAL_ID))
+            .expectError(ConflictoRelacionException.class)
+            .verify();
+    }
+
+    @Test
+    void obtieneElKardexDeUnProductoSinFiltrosDeFecha() {
+        UUID productoId = UUID.randomUUID();
+        when(sucursalPort.findById(SUCURSAL_ID))
+            .thenReturn(Mono.just(new Sucursal(SUCURSAL_ID, FRANQUICIA_ID, "Sede Norte")));
+        when(productoPort.findById(productoId))
+            .thenReturn(Mono.just(new Producto(productoId, SUCURSAL_ID, "Manzana", 60)));
+        TransaccionStock t1 = new TransaccionStock(UUID.randomUUID(), productoId, "ENTRADA", 50, LocalDateTime.now());
+        TransaccionStock t2 = new TransaccionStock(UUID.randomUUID(), productoId, "SALIDA", 10, LocalDateTime.now());
+        when(productoPort.findKardex(productoId, null, null)).thenReturn(Flux.just(t1, t2));
+
+        StepVerifier.create(service.obtenerKardex(FRANQUICIA_ID, SUCURSAL_ID, productoId, null, null))
+            .expectNext(t1)
+            .expectNext(t2)
+            .verifyComplete();
+    }
+
+    @Test
+    void obtieneElKardexDeUnProductoFiltradoPorRangoDeFechas() {
+        UUID productoId = UUID.randomUUID();
+        LocalDateTime desde = LocalDateTime.now().minusDays(7);
+        LocalDateTime hasta = LocalDateTime.now();
+        when(sucursalPort.findById(SUCURSAL_ID))
+            .thenReturn(Mono.just(new Sucursal(SUCURSAL_ID, FRANQUICIA_ID, "Sede Norte")));
+        when(productoPort.findById(productoId))
+            .thenReturn(Mono.just(new Producto(productoId, SUCURSAL_ID, "Manzana", 60)));
+        TransaccionStock t1 = new TransaccionStock(UUID.randomUUID(), productoId, "ENTRADA", 50, desde.plusDays(1));
+        when(productoPort.findKardex(productoId, desde, hasta)).thenReturn(Flux.just(t1));
+
+        StepVerifier.create(service.obtenerKardex(FRANQUICIA_ID, SUCURSAL_ID, productoId, desde, hasta))
+            .expectNext(t1)
+            .verifyComplete();
+    }
+
+    @Test
+    void falloAlObtenerKardexDeProductoDeOtraSucursal() {
+        UUID productoId = UUID.randomUUID();
+        UUID otraSucursalId = UUID.randomUUID();
+        when(sucursalPort.findById(SUCURSAL_ID))
+            .thenReturn(Mono.just(new Sucursal(SUCURSAL_ID, FRANQUICIA_ID, "Sede Norte")));
+        when(productoPort.findById(productoId))
+            .thenReturn(Mono.just(new Producto(productoId, otraSucursalId, "Manzana", 10)));
+
+        StepVerifier.create(service.obtenerKardex(FRANQUICIA_ID, SUCURSAL_ID, productoId, null, null))
+            .expectError(ConflictoRelacionException.class)
+            .verify();
     }
 
     @Test

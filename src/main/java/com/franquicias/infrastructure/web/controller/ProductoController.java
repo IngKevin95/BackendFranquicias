@@ -6,7 +6,9 @@ import com.franquicias.infrastructure.web.dto.ModificarStockRequest;
 import com.franquicias.infrastructure.web.dto.NombreRequest;
 import com.franquicias.infrastructure.web.dto.ProductoMaxStockResponse;
 import com.franquicias.infrastructure.web.dto.ProductoResponse;
+import com.franquicias.infrastructure.web.dto.TransaccionStockResponse;
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,6 +23,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.format.annotation.DateTimeFormat;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -70,6 +74,23 @@ public class ProductoController {
                                              @Valid @RequestBody NombreRequest request) {
         return service.renombrar(franquiciaId, sucursalId, productoId, request.nombre())
             .map(ProductoResponse::from);
+    }
+
+    @GetMapping("/api/v1/franquicias/{franquiciaId}/sucursales/{sucursalId}/productos")
+    @Operation(summary = "Listar Productos", description = "Lista los productos de una sucursal, con su stock actual.")
+    public Flux<ProductoResponse> listar(@PathVariable UUID franquiciaId, @PathVariable UUID sucursalId) {
+        return service.listarPorSucursal(franquiciaId, sucursalId)
+            .map(ProductoResponse::from);
+    }
+
+    @GetMapping("/api/v1/franquicias/{franquiciaId}/sucursales/{sucursalId}/productos/{productoId}/kardex")
+    @Operation(summary = "Kardex de Producto", description = "Historial de transacciones de stock de un producto, filtrable por rango de fechas (desde/hasta, ISO-8601).")
+    public Flux<TransaccionStockResponse> kardex(
+            @PathVariable UUID franquiciaId, @PathVariable UUID sucursalId, @PathVariable UUID productoId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta) {
+        return service.obtenerKardex(franquiciaId, sucursalId, productoId, desde, hasta)
+            .map(TransaccionStockResponse::from);
     }
 
     @GetMapping("/api/v1/franquicias/{franquiciaId}/productos/max-stock")

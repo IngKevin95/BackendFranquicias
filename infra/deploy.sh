@@ -8,9 +8,13 @@ cd /opt/app
 
 BRANCH="${1:-}"
 if [ -n "$BRANCH" ]; then
+  # ponytail: checkout -B contra FETCH_HEAD funciona sin importar si la rama ya
+  # existia localmente en el servidor (a diferencia de `git checkout "$BRANCH"`,
+  # que falla con "pathspec did not match" en la primera vez que se deploya una
+  # rama nueva, porque `git fetch origin <branch>` solo llena FETCH_HEAD).
   git fetch origin "$BRANCH"
-  git checkout "$BRANCH"
-  git reset --hard "origin/$BRANCH"
+  git checkout -B "$BRANCH" FETCH_HEAD
+  git reset --hard FETCH_HEAD
 else
   git pull
 fi

@@ -5,6 +5,7 @@ import com.franquicias.domain.model.Franquicia;
 import com.franquicias.domain.port.FranquiciaRepositoryPort;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -24,5 +25,14 @@ public class FranquiciaService {
         return port.findById(id)
             .switchIfEmpty(Mono.error(new FranquiciaNotFoundException(id)))
             .flatMap(existing -> port.updateNombre(id, nuevoNombre).then(port.findById(id)));
+    }
+
+    public Flux<Franquicia> listar() {
+        return port.findAll();
+    }
+
+    public Mono<Franquicia> obtener(UUID id) {
+        return port.findById(id)
+            .switchIfEmpty(Mono.error(new FranquiciaNotFoundException(id)));
     }
 }

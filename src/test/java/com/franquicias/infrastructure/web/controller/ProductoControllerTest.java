@@ -11,6 +11,8 @@ import com.franquicias.infrastructure.web.dto.CrearProductoRequest;
 import com.franquicias.infrastructure.web.dto.ModificarStockRequest;
 import com.franquicias.infrastructure.web.dto.NombreRequest;
 import com.franquicias.infrastructure.web.dto.ProductoResponse;
+import com.franquicias.infrastructure.web.dto.TransaccionStockResponse;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -150,6 +152,77 @@ class ProductoControllerTest extends AbstractIntegrationTest {
     @Test
     void retorna404AlPedirMaxStockDeFranquiciaInexistente() {
         webTestClient.get().uri("/api/v1/franquicias/" + java.util.UUID.randomUUID() + "/productos/max-stock")
+            .exchange()
+            .expectStatus().isNotFound();
+    }
+
+    @Test
+    void listaLosProductosDeUnaSucursal() {
+        webTestClient.post().uri(basePath())
+            .bodyValue(new CrearProductoRequest("Manzana")).exchange().expectStatus().isCreated();
+        webTestClient.post().uri(basePath())
+            .bodyValue(new CrearProductoRequest("Pera")).exchange().expectStatus().isCreated();
+
+        webTestClient.get().uri(basePath())
+            .exchange()
+            .expectStatus().isOk()
+            .expectBodyList(ProductoResponse.class)
+            .value(list -> assertThat(list).extracting(ProductoResponse::nombre)
+                .containsExactlyInAnyOrder("Manzana", "Pera"));
+    }
+
+    @Test
+    void retorna404AlListarProductosDeSucursalInexistente() {
+        webTestClient.get()
+            .uri("/api/v1/franquicias/" + franquicia.id() + "/sucursales/" + java.util.UUID.randomUUID() + "/productos")
+            .exchange()
+            .expectStatus().isNotFound();
+    }
+
+    @Test
+    void obtieneElKardexDeUnProductoConSusMovimientos() {
+        ProductoResponse creado = webTestClient.post().uri(basePath())
+            .bodyValue(new CrearProductoRequest("Manzana"))
+            .exchange().expectBody(ProductoResponse.class).returnResult().getResponseBody();
+
+        webTestClient.patch().uri(basePath() + "/" + creado.id() + "/stock")
+            .bodyValue(new ModificarStockRequest("ENTRADA", 50)).exchange().expectStatus().isOk();
+        webTestClient.patch().uri(basePath() + "/" + creado.id() + "/stock")
+            .bodyValue(new ModificarStockRequest("SALIDA", 20)).exchange().expectStatus().isOk();
+
+        webTestClient.get().uri(basePath() + "/" + creado.id() + "/kardex")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBodyList(TransaccionStockResponse.class)
+            .value(list -> {
+                assertThat(list).hasSize(2);
+                assertThat(list).extracting(TransaccionStockResponse::tipo)
+                    .containsExactlyInAnyOrder("ENTRADA", "SALIDA");
+            });
+    }
+
+    @Test
+    void filtraElKardexPorRangoDeFechas() {
+        ProductoResponse creado = webTestClient.post().uri(basePath())
+            .bodyValue(new CrearProductoRequest("Manzana"))
+            .exchange().expectBody(ProductoResponse.class).returnResult().getResponseBody();
+
+        webTestClient.patch().uri(basePath() + "/" + creado.id() + "/stock")
+            .bodyValue(new ModificarStockRequest("ENTRADA", 50)).exchange().expectStatus().isOk();
+
+        String desde = LocalDateTime.now().plusDays(1).toString();
+        String hasta = LocalDateTime.now().plusDays(2).toString();
+
+        webTestClient.get().uri(basePath() + "/" + creado.id() + "/kardex?desde=" + desde + "&hasta=" + hasta)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBodyList(TransaccionStockResponse.class)
+            .value(list -> assertThat(list).isEmpty());
+    }
+
+    @Test
+    void retorna404AlPedirKardexDeProductoInexistente() {
+        webTestClient.get().uri(basePath() + "/" + java.util.UUID.randomUUID() + "/kardex")
             .exchange()
             .expectStatus().isNotFound();
     }

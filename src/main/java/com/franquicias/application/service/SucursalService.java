@@ -8,6 +8,7 @@ import com.franquicias.domain.port.FranquiciaRepositoryPort;
 import com.franquicias.domain.port.SucursalRepositoryPort;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -36,5 +37,11 @@ public class SucursalService {
                 }
                 return sucursalPort.updateNombre(sucursalId, nuevoNombre).then(sucursalPort.findById(sucursalId));
             });
+    }
+
+    public Flux<Sucursal> listarPorFranquicia(UUID franquiciaId) {
+        return franquiciaPort.findById(franquiciaId)
+            .switchIfEmpty(Mono.error(new FranquiciaNotFoundException(franquiciaId)))
+            .flatMapMany(franquicia -> sucursalPort.findByFranquiciaId(franquiciaId));
     }
 }

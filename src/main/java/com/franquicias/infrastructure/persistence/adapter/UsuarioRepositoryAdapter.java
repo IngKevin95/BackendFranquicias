@@ -9,6 +9,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -58,5 +59,10 @@ public class UsuarioRepositoryAdapter implements UsuarioRepositoryPort {
             })
             .one()
             .map(mapper::toDomain);
+    }
+
+    @Override
+    public Flux<Usuario> findAll() {
+        return repository.findAll().map(mapper::toDomain);
     }
 }
