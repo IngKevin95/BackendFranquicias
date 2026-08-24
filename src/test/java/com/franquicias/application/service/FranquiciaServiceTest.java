@@ -40,11 +40,12 @@ class FranquiciaServiceTest {
     @Test
     void renombraUnaFranquiciaExistente() {
         UUID id = UUID.randomUUID();
-        when(port.findById(id)).thenReturn(Mono.just(new Franquicia(id, "Nombre viejo")));
-        when(port.save(any())).thenReturn(Mono.just(new Franquicia(id, "Nombre nuevo")));
+        when(port.findById(id)).thenReturn(Mono.just(new Franquicia(id, "Antiguo Nombre")));
+        when(port.updateNombre(id, "Nuevo Nombre")).thenReturn(Mono.empty());
+        when(port.findById(id)).thenReturn(Mono.just(new Franquicia(id, "Nuevo Nombre")));
 
-        StepVerifier.create(service.renombrar(id, "Nombre nuevo"))
-            .expectNextMatches(f -> f.nombre().equals("Nombre nuevo"))
+        StepVerifier.create(service.renombrar(id, "Nuevo Nombre"))
+            .expectNextMatches(f -> f.nombre().equals("Nuevo Nombre"))
             .verifyComplete();
     }
 
