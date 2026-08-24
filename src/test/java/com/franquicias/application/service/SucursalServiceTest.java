@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -61,6 +62,30 @@ class SucursalServiceTest {
 
         StepVerifier.create(service.renombrar(franquiciaId, sucursalId, "Nuevo nombre"))
             .expectError(com.franquicias.domain.exception.ConflictoRelacionException.class)
+            .verify();
+    }
+
+    @Test
+    void listaSucursalesDeUnaFranquiciaExistente() {
+        UUID franquiciaId = UUID.randomUUID();
+        Sucursal s1 = new Sucursal(UUID.randomUUID(), franquiciaId, "Sede Norte");
+        Sucursal s2 = new Sucursal(UUID.randomUUID(), franquiciaId, "Sede Sur");
+        when(franquiciaPort.findById(franquiciaId)).thenReturn(Mono.just(new Franquicia(franquiciaId, "Frutería")));
+        when(sucursalPort.findByFranquiciaId(franquiciaId)).thenReturn(Flux.just(s1, s2));
+
+        StepVerifier.create(service.listarPorFranquicia(franquiciaId))
+            .expectNext(s1)
+            .expectNext(s2)
+            .verifyComplete();
+    }
+
+    @Test
+    void falloAlListarSucursalesDeFranquiciaInexistente() {
+        UUID franquiciaId = UUID.randomUUID();
+        when(franquiciaPort.findById(franquiciaId)).thenReturn(Mono.empty());
+
+        StepVerifier.create(service.listarPorFranquicia(franquiciaId))
+            .expectError(FranquiciaNotFoundException.class)
             .verify();
     }
 }

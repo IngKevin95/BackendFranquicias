@@ -6,6 +6,7 @@ import com.franquicias.infrastructure.persistence.mapper.SucursalMapper;
 import com.franquicias.infrastructure.persistence.repository.SucursalR2dbcRepository;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -41,5 +42,10 @@ public class SucursalRepositoryAdapter implements SucursalRepositoryPort {
             .fetch()
             .rowsUpdated()
             .then();
+    }
+
+    @Override
+    public Flux<Sucursal> findByFranquiciaId(UUID franquiciaId) {
+        return repository.findByFranquiciaId(franquiciaId).map(mapper::toDomain);
     }
 }

@@ -9,12 +9,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -40,5 +42,11 @@ public class SucursalController {
     public Mono<SucursalResponse> renombrar(@PathVariable UUID franquiciaId, @PathVariable UUID sucursalId,
                                              @Valid @RequestBody NombreRequest request) {
         return service.renombrar(franquiciaId, sucursalId, request.nombre()).map(SucursalResponse::from);
+    }
+
+    @GetMapping("/api/v1/franquicias/{franquiciaId}/sucursales")
+    @Operation(summary = "Listar Sucursales", description = "Lista las sucursales de una franquicia.")
+    public Flux<SucursalResponse> listar(@PathVariable UUID franquiciaId) {
+        return service.listarPorFranquicia(franquiciaId).map(SucursalResponse::from);
     }
 }
