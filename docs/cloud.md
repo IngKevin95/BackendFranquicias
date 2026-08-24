@@ -49,18 +49,15 @@ sudo docker logs app --tail 50 -f
 # ver logs de redis
 sudo docker logs redis --tail 50
 
-# reiniciar la app (por ejemplo tras cambiar código)
-cd /opt/app
-sudo git pull
-sudo docker build -t franquicias-api:latest .
-sudo docker rm -f app
-sudo docker run -d --name app --restart unless-stopped --network host \
-  -e SPRING_R2DBC_URL='r2dbc:postgresql://franquicias-api-db.cezeaao661s0.us-east-1.rds.amazonaws.com:5432/franquicias?sslMode=require' \
-  -e SPRING_FLYWAY_URL='jdbc:postgresql://franquicias-api-db.cezeaao661s0.us-east-1.rds.amazonaws.com:5432/franquicias?ssl=true&sslmode=require' \
-  -e DB_USER=franquicias -e DB_PASSWORD='<ver terraform.tfvars>' \
-  -e REDIS_HOST=127.0.0.1 -e REDIS_PORT=6379 -e SERVER_PORT=8080 \
-  franquicias-api:latest
+# reiniciar la app (por ejemplo tras cambiar código en develop)
+sudo /opt/app/infra/deploy.sh
 ```
+
+`deploy.sh` hace `git pull` + rebuild + reinicia el contenedor `app` reutilizando las
+env vars (DB, Redis) que ya tenía el contenedor anterior via `docker inspect` — no
+hace falta reescribir la password cada vez. Si cambian las credenciales de la DB,
+recrear el contenedor una vez a mano con el `docker run` completo (ver
+`infra/user_data.sh.tpl` como referencia) y de ahí en más `deploy.sh` ya las reusa.
 
 ## Gestión con Terraform
 
