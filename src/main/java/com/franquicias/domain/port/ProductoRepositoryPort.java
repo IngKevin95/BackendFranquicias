@@ -13,5 +13,5 @@ public interface ProductoRepositoryPort {
     Flux<ProductoMaxStock> findMaxStockPorFranquicia(UUID franquiciaId, int limit, int offset);
     Mono<Long> updateStockNativo(UUID id, int cantidadCambio);
     Mono<Void> updateNombre(UUID id, String nombre);
-    Mono<Void> registrarTransaccionStock(UUID productoId, String tipo, int cantidad);
+    Mono<Void> registrarTransaccionStock(UUID productoId, String tipo, int cantidad, String idempotencyKey);
 }

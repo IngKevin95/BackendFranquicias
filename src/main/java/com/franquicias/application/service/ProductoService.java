@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import java.time.Duration;
 
+import org.springframework.dao.DataIntegrityViolationException;
+
 @Service
 public class ProductoService {
 
@@ -48,7 +50,7 @@ public class ProductoService {
     }
 
     @Transactional
-    public Mono<Producto> modificarStock(UUID franquiciaId, UUID sucursalId, UUID productoId, String tipo, int cantidad) {
+    public Mono<Producto> modificarStock(UUID franquiciaId, UUID sucursalId, UUID productoId, String tipo, int cantidad, String idempotencyKey) {
         int cantidadCambio = "ENTRADA".equals(tipo) ? cantidad : -cantidad;
         
         return sucursalDeFranquicia(franquiciaId, sucursalId)
@@ -59,11 +61,17 @@ public class ProductoService {
                         if (filasActualizadas == 0) {
                             return Mono.error(new IllegalArgumentException("Stock insuficiente para realizar la salida"));
                         }
-                        return productoPort.registrarTransaccionStock(productoId, tipo, cantidad);
+                        return productoPort.registrarTransaccionStock(productoId, tipo, cantidad, idempotencyKey);
                     })
                     .then(invalidarCacheMaxStock(franquiciaId))
                     .then(productoPort.findById(productoId))
-            );
+            )
+            .onErrorResume(DataIntegrityViolationException.class, e -> {
+                if (e.getMessage() != null && e.getMessage().contains("idx_transaccion_stock_idempotency")) {
+                    return productoPort.findById(productoId);
+                }
+                return Mono.error(e);
+            });
     }
 
     public Mono<Producto> renombrar(UUID franquiciaId, UUID sucursalId, UUID productoId, String nuevoNombre) {
