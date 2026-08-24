@@ -34,3 +34,10 @@ replay_pid*
 
 # VS Code History
 .history/
+
+# Terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/terraform.tfvars
+infra/tfplan*
