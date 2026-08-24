@@ -25,6 +25,7 @@ public class ProductoRepositoryAdapter implements ProductoRepositoryPort {
         JOIN sucursal s ON s.id = p.sucursal_id
         WHERE s.franquicia_id = :franquiciaId
         ORDER BY p.sucursal_id, p.stock DESC
+        LIMIT :limit OFFSET :offset
         """;
 
     private final ProductoR2dbcRepository repository;
@@ -54,9 +55,11 @@ public class ProductoRepositoryAdapter implements ProductoRepositoryPort {
     }
 
     @Override
-    public Flux<ProductoMaxStock> findMaxStockPorFranquicia(UUID franquiciaId) {
+    public Flux<ProductoMaxStock> findMaxStockPorFranquicia(UUID franquiciaId, int limit, int offset) {
         return databaseClient.sql(MAX_STOCK_QUERY)
             .bind("franquiciaId", franquiciaId)
+            .bind("limit", limit)
+            .bind("offset", offset)
             .map((row, metadata) -> new ProductoMaxStock(
                 row.get("sucursal_id", UUID.class),
                 row.get("sucursal_nombre", String.class),
@@ -66,5 +69,33 @@ public class ProductoRepositoryAdapter implements ProductoRepositoryPort {
                     row.get("producto_nombre", String.class),
                     row.get("stock", Integer.class))))
             .all();
+    }
+
+    @Override
+    public Mono<Long> updateStockNativo(UUID id, int cantidadCambio) {
+        return databaseClient.sql("UPDATE producto SET stock = stock + :cambio WHERE id = :id AND (stock + :cambio) >= 0")
+            .bind("cambio", cantidadCambio)
+            .bind("id", id)
+            .fetch()
+            .rowsUpdated();
+    }
+
+    @Override
+    public Mono<Void> updateNombre(UUID id, String nombre) {
+        return databaseClient.sql("UPDATE producto SET nombre = :nombre WHERE id = :id")
+            .bind("nombre", nombre)
+            .bind("id", id)
+            .fetch()
+            .rowsUpdated()
+            .then();
+    }
+
+    @Override
+    public Mono<Void> registrarTransaccionStock(UUID productoId, String tipo, int cantidad) {
+        return databaseClient.sql("INSERT INTO transaccion_stock (producto_id, tipo, cantidad) VALUES (:productoId, :tipo, :cantidad)")
+            .bind("productoId", productoId)
+            .bind("tipo", tipo)
+            .bind("cantidad", cantidad)
+            .then();
     }
 }

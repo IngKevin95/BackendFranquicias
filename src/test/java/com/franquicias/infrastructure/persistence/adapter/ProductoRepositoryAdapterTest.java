@@ -32,7 +32,7 @@ class ProductoRepositoryAdapterTest extends AbstractIntegrationTest {
         productoAdapter.save(new Producto(null, sedeNorte.id(), "Pera", 25)).block();
         productoAdapter.save(new Producto(null, sedeSur.id(), "Uva", 5)).block();
 
-        List<ProductoMaxStock> resultado = productoAdapter.findMaxStockPorFranquicia(franquicia.id())
+        List<ProductoMaxStock> resultado = productoAdapter.findMaxStockPorFranquicia(franquicia.id(), 10, 0)
             .collectList().block();
 
         assertThat(resultado).hasSize(2);

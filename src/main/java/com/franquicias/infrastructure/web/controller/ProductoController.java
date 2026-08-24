@@ -33,7 +33,7 @@ public class ProductoController {
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<ProductoResponse> agregar(@PathVariable UUID franquiciaId, @PathVariable UUID sucursalId,
                                            @Valid @RequestBody CrearProductoRequest request) {
-        return service.agregar(franquiciaId, sucursalId, request.nombre(), request.stock())
+        return service.agregar(franquiciaId, sucursalId, request.nombre())
             .map(ProductoResponse::from);
     }
 
@@ -48,7 +48,7 @@ public class ProductoController {
     public Mono<ProductoResponse> modificarStock(@PathVariable UUID franquiciaId, @PathVariable UUID sucursalId,
                                                   @PathVariable UUID productoId,
                                                   @Valid @RequestBody ModificarStockRequest request) {
-        return service.modificarStock(franquiciaId, sucursalId, productoId, request.stock())
+        return service.modificarStock(franquiciaId, sucursalId, productoId, request.tipo(), request.cantidad())
             .map(ProductoResponse::from);
     }
 
@@ -62,8 +62,10 @@ public class ProductoController {
 
     @GetMapping("/api/v1/franquicias/{franquiciaId}/productos/max-stock")
     public Flux<ProductoMaxStockResponse> maxStockPorSucursal(
-            @PathVariable UUID franquiciaId) {
-        return service.obtenerMaxStockPorFranquicia(franquiciaId)
+            @PathVariable UUID franquiciaId,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "10") int limit,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int offset) {
+        return service.obtenerMaxStockPorFranquicia(franquiciaId, limit, offset)
             .map(ProductoMaxStockResponse::from);
     }
 }
