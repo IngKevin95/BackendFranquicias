@@ -76,27 +76,36 @@ curl -X POST http://localhost:8080/api/v1/franquicias \
 
 ## Despliegue en AWS
 
-Infraestructura como código en `infra/` (Terraform): RDS PostgreSQL, ECR,
-ECS Fargate.
+Infraestructura como código en `infra/` (Terraform), pensada para caber en el
+free tier de AWS: EC2 (t3.micro, corre la app dockerizada + Redis) y RDS
+PostgreSQL (db.t3.micro). Sin ALB, ECS ni ECR.
 
 ```bash
 cd infra
-cp terraform.tfvars.example terraform.tfvars   # editar con tus valores
+cp terraform.tfvars.example terraform.tfvars   # editar con tus valores (password DB, clave SSH pública)
 terraform init
+terraform plan
 terraform apply
 ```
 
-Luego construir y publicar la imagen:
+`terraform apply` deja la instancia lista sola: el `user_data.sh.tpl` instala
+Docker, clona el repo, buildea la imagen y levanta los contenedores `app` y
+`redis`. Al terminar, `terraform output` muestra la IP pública y la URL de la
+API.
+
+Para actualizar el código en una instancia que ya está corriendo (sin
+recrearla), conectarse por SSH y correr el script de redeploy:
 
 ```bash
-aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <ecr_repository_url>
-docker build -t <ecr_repository_url>:latest .
-docker push <ecr_repository_url>:latest
+ssh -i <tu-clave> ec2-user@<ip-de-la-instancia>
+sudo /opt/app/infra/deploy.sh
 ```
 
-Y actualizar el servicio ECS para usar la nueva imagen (o volver a aplicar
-Terraform pasando `container_image` con el tag correspondiente).
+`deploy.sh` hace `git pull` + rebuild de la imagen + reinicio del contenedor
+`app`, reutilizando las variables de entorno (DB, Redis) que ya tenía
+configuradas. Más detalle operativo (SSH, logs, apagar todo con
+`terraform destroy`) en `docs/cloud.md`.
 
 ## CI
 
-`.github/workflows/ci.yml` corre `mvn verify` en cada push/PR a `main`.
+`.github/workflows/ci.yml` corre `mvn verify` en cada push/PR a `main` y `develop`.
