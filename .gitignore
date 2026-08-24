@@ -31,3 +31,6 @@ replay_pid*
 
 # Local project instructions (not committed, no trace in history)
 /CLAUDE.md
+
+# VS Code History
+.history/

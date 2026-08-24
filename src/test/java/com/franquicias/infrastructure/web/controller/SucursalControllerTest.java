@@ -12,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import com.franquicias.infrastructure.config.security.JwtUtil;
+import org.junit.jupiter.api.BeforeEach;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SucursalControllerTest extends AbstractIntegrationTest {
 
@@ -19,6 +22,14 @@ class SucursalControllerTest extends AbstractIntegrationTest {
     private WebTestClient webTestClient;
     @Autowired
     private FranquiciaService franquiciaService;
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @BeforeEach
+    void setUp() {
+        String token = jwtUtil.generateToken("admin");
+        webTestClient = webTestClient.mutate().defaultHeader("Authorization", "Bearer " + token).build();
+    }
 
     @Test
     void agregaUnaSucursalYLaRenombra() {

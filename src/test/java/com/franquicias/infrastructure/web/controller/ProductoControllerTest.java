@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import com.franquicias.infrastructure.config.security.JwtUtil;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ProductoControllerTest extends AbstractIntegrationTest {
 
@@ -26,6 +28,8 @@ class ProductoControllerTest extends AbstractIntegrationTest {
     private FranquiciaService franquiciaService;
     @Autowired
     private SucursalService sucursalService;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     private Franquicia franquicia;
     private Sucursal sucursal;
@@ -34,6 +38,8 @@ class ProductoControllerTest extends AbstractIntegrationTest {
     void crearFixtures() {
         franquicia = franquiciaService.crear("Frutería Don Pepe").block();
         sucursal = sucursalService.agregar(franquicia.id(), "Sede Norte").block();
+        String token = jwtUtil.generateToken("admin");
+        webTestClient = webTestClient.mutate().defaultHeader("Authorization", "Bearer " + token).build();
     }
 
     private String basePath() {

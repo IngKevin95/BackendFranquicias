@@ -91,11 +91,20 @@ public class ProductoRepositoryAdapter implements ProductoRepositoryPort {
     }
 
     @Override
-    public Mono<Void> registrarTransaccionStock(UUID productoId, String tipo, int cantidad) {
-        return databaseClient.sql("INSERT INTO transaccion_stock (producto_id, tipo, cantidad) VALUES (:productoId, :tipo, :cantidad)")
-            .bind("productoId", productoId)
-            .bind("tipo", tipo)
-            .bind("cantidad", cantidad)
-            .then();
+    public Mono<Void> registrarTransaccionStock(UUID productoId, String tipo, int cantidad, String idempotencyKey) {
+        DatabaseClient.GenericExecuteSpec sql = databaseClient.sql(
+            "INSERT INTO transaccion_stock (producto_id, tipo, cantidad, idempotency_key) VALUES (:productoId, :tipo, :cantidad, :idempotencyKey)"
+        )
+        .bind("productoId", productoId)
+        .bind("tipo", tipo)
+        .bind("cantidad", cantidad);
+        
+        if (idempotencyKey != null) {
+            sql = sql.bind("idempotencyKey", UUID.fromString(idempotencyKey));
+        } else {
+            sql = sql.bindNull("idempotencyKey", UUID.class);
+        }
+
+        return sql.then();
     }
 }
