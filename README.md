@@ -5,6 +5,10 @@ sucursales, y los productos ofertados en cada sucursal — con autenticación
 JWT por roles, kardex de inventario, consultas filtradas y despliegue
 automatizado en AWS.
 
+> **¿Querés arrancar rápido?** Ver [QUICKSTART.md](QUICKSTART.md) para correr
+> el proyecto en local o desplegarlo en AWS paso a paso, incluyendo
+> problemas comunes y sus soluciones.
+
 ## Arquitectura
 
 Hexagonal: `domain` (modelos y puertos puros) → `application` (casos de uso)
