@@ -36,5 +36,8 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.flyway.password", POSTGRES::getPassword);
         registry.add("spring.data.redis.host", REDIS::getHost);
         registry.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379));
+        registry.add("app.admin.username", () -> "admin");
+        registry.add("app.admin.password", () -> "admin123");
+        registry.add("app.admin.email", () -> "admin@franquicias.com");
     }
 }

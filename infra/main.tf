@@ -122,6 +122,9 @@ resource "aws_instance" "app" {
     db_name     = var.db_name
     db_user     = var.db_username
     db_password = var.db_password
+    admin_username = var.admin_username
+    admin_password = var.admin_password
+    admin_email    = var.admin_email
   })
 
   tags = {
