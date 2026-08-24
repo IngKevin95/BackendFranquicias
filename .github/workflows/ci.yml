@@ -3,6 +3,7 @@ name: CI
 on:
   pull_request:
     branches: [main, develop]
+  workflow_dispatch:
 
 jobs:
   build-and-test:
@@ -22,7 +23,7 @@ jobs:
 
   deploy:
     needs: build-and-test
-    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main')
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
@@ -31,4 +32,4 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          script: sudo bash /opt/app/infra/deploy.sh ${{ github.head_ref }}
+          script: sudo bash /opt/app/infra/deploy.sh ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
