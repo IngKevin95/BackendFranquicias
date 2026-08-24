@@ -68,15 +68,28 @@ mvn test
 levantando PostgreSQL y Redis reales). Los tests de integración requieren
 Docker disponible.
 
-## Usuario admin de arranque
+## Autenticación: cómo obtener un token
 
-La migración `V4__usuarios.sql` siembra un usuario `admin` (password
-`admin123`, rol `ADMIN`). Usalo para obtener el primer token vía
-`POST /api/v1/auth/login` y desde ahí crear el resto de usuarios con el rol
-que corresponda.
+Ningún endpoint de negocio acepta credenciales directamente — todos exigen
+un JWT obtenido primero por `POST /api/v1/auth/login`:
 
-> Credencial de arranque para desarrollo local únicamente — cambiala o
-> deshabilitala antes de exponer una instancia a producción real.
+```bash
+curl -X POST http://localhost:8089/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"<usuario>","password":"<password>"}'
+```
+
+La respuesta trae el token (`{"token": "..."}`), que va en el header
+`Authorization: Bearer <token>` de cualquier otro request. El token incluye
+el rol del usuario (`ADMIN`/`WRITE`/`READ`) como claim, y ese rol es el que
+determina qué endpoints puede usar (ver tabla de [Endpoints](#endpoints)).
+
+La migración `V4__usuarios.sql` siembra un usuario `admin` con rol `ADMIN`
+para poder crear el resto de usuarios desde ahí (`POST /api/v1/usuarios`).
+**Las credenciales de ese usuario no están en este repositorio** — se
+comparten por un canal aparte. Con ese usuario podés loguearte y, si hace
+falta, crear usuarios `WRITE`/`READ` adicionales para dar acceso a otras
+personas sin compartir la cuenta admin.
 
 ---
 
@@ -211,10 +224,10 @@ Todos requieren `Authorization: Bearer <token>` salvo `/api/v1/auth/login`.
 ### Ejemplo de flujo completo
 
 ```bash
-# 1. Login
+# 1. Login (usuario y password provistos por separado)
 TOKEN=$(curl -s -X POST http://localhost:8089/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}' | jq -r .token)
+  -d '{"username":"<usuario>","password":"<password>"}' | jq -r .token)
 
 # 2. Crear franquicia
 curl -X POST http://localhost:8089/api/v1/franquicias \
@@ -303,9 +316,11 @@ Cada PR corre el pipeline de CI (build + 64 tests) antes de poder mergearse.
   por variable de entorno. Válido para esta prueba técnica; para un uso real
   en producción habría que externalizarlo (variable de entorno o secret
   manager) y rotarlo.
-- **Password de seed del admin en el repo** (`admin`/`admin123`, ver
-  `V4__usuarios.sql`): pensado para arrancar rápido en local/demo — cambiar
-  o deshabilitar ese usuario antes de exponer una instancia real.
+- **Usuario admin sembrado por migración** (ver `V4__usuarios.sql`, hash
+  BCrypt de una password fija): las credenciales no se documentan en este
+  repositorio, se comparten por un canal aparte. Igual, para un despliegue
+  real conviene rotar esa password (o deshabilitar el usuario) apenas se
+  tenga acceso, en vez de depender del seed.
 - **Expiración de token fija en 10 horas**, sin refresh token: al vencer,
   hay que loguearse de nuevo.
 - **`ssh_cidr` por defecto en `0.0.0.0/0`** en `terraform.tfvars.example`:

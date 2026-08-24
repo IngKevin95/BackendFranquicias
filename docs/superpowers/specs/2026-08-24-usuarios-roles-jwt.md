@@ -32,7 +32,7 @@ CREATE TABLE usuario (
 - `password_hash`: hash BCrypt del password en texto plano. Factor de costo 10.
 - `role`: enum nativo PostgreSQL. Un usuario tiene exactamente un rol.
 - `activo`: permite deshabilitar un usuario sin borrarlo. Usuarios inactivos reciben 401 en login.
-- Seed inicial: usuario `admin` con password `admin123` y rol `ADMIN`, insertado via Flyway `V4`.
+- Seed inicial: usuario `admin` con password `<password-provista-por-separado>` y rol `ADMIN`, insertado via Flyway `V4`.
 
 ---
 

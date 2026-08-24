@@ -20,12 +20,14 @@ docker compose up --build
 - Swagger UI: `http://localhost:8089/swagger-ui.html`
 - Health: `http://localhost:8089/actuator/health`
 
-Login con el usuario de seed:
+Login (todo endpoint requiere JWT — no hay acceso sin loguearse primero; las
+credenciales del usuario admin de arranque se comparten por un canal
+aparte, no están en este repo):
 
 ```bash
 curl -X POST http://localhost:8089/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+  -d '{"username":"<usuario>","password":"<password>"}'
 ```
 
 Parar todo: `docker compose down`. Parar y borrar los datos de Postgres:

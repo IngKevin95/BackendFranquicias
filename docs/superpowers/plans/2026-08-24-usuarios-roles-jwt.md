@@ -58,7 +58,7 @@ CREATE TABLE usuario (
     CONSTRAINT uq_usuario_email    UNIQUE (email)
 );
 
--- Seed: admin / admin123 con BCrypt factor 10
+-- Seed: admin / <password-provista-por-separado> con BCrypt factor 10
 INSERT INTO usuario (username, password_hash, email, role)
 VALUES (
     'admin',
@@ -784,7 +784,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
     @Test
     void login_adminCredentials_returnsToken() {
         webTestClient.post().uri("/api/v1/auth/login")
-            .bodyValue(new AuthRequest("admin", "admin123"))
+            .bodyValue(new AuthRequest("admin", "<password-provista-por-separado>"))
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -968,7 +968,7 @@ git commit -m "test(usuarios): update existing controller tests to use generateT
 
 - [ ] **Step 1: Verificar que `test.ps1` y `test.sh` usan login real**
 
-Los scripts ya llaman a `/api/v1/auth/login`. Verificar que el payload sea `{"username":"admin","password":"admin123"}` ÔÇö si es asi, no hay cambio necesario pues el endpoint mantiene el mismo contrato.
+Los scripts ya llaman a `/api/v1/auth/login`. Verificar que el payload sea `{"username":"admin","password":"<password-provista-por-separado>"}` ÔÇö si es asi, no hay cambio necesario pues el endpoint mantiene el mismo contrato.
 
 - [ ] **Step 2: Agregar ejemplo de creacion de usuario en `api-tests.http`**
 

@@ -2,8 +2,14 @@ $ErrorActionPreference = "Stop"
 
 $BASE_URL = "http://localhost:8080/api/v1"
 
+if (-not $env:ADMIN_USER -or -not $env:ADMIN_PASSWORD) {
+    Write-Error "Definir `$env:ADMIN_USER y `$env:ADMIN_PASSWORD antes de correr este script."
+    exit 1
+}
+
 Write-Host "0. Obtener Token JWT"
-$AUTH_RES = Invoke-RestMethod -Method Post -Uri "$BASE_URL/auth/login" -ContentType "application/json" -Body '{"username": "admin", "password": "admin123"}'
+$loginBody = @{ username = $env:ADMIN_USER; password = $env:ADMIN_PASSWORD } | ConvertTo-Json
+$AUTH_RES = Invoke-RestMethod -Method Post -Uri "$BASE_URL/auth/login" -ContentType "application/json" -Body $loginBody
 $TOKEN = $AUTH_RES.token
 Write-Host "Token JWT obtenido con éxito"
 
