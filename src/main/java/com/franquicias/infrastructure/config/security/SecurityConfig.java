@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .pathMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/webjars/**").permitAll()
                 // Solo ADMIN
                 .pathMatchers(HttpMethod.POST, "/api/v1/usuarios").hasRole("ADMIN")
+                .pathMatchers(HttpMethod.GET, "/api/v1/usuarios").hasRole("ADMIN")
                 // WRITE y ADMIN — escritura sobre el catalogo
                 .pathMatchers(HttpMethod.POST, "/api/v1/franquicias").hasAnyRole("WRITE", "ADMIN")
                 .pathMatchers(HttpMethod.PATCH, "/api/v1/franquicias/**").hasAnyRole("WRITE", "ADMIN")
