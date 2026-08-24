@@ -27,7 +27,7 @@ public class AuthController {
     public Mono<AuthResponse> login(@RequestBody AuthRequest request) {
         // Mock authentication para propósitos de la prueba técnica
         if ("admin".equals(request.username()) && "admin123".equals(request.password())) {
-            return Mono.just(new AuthResponse(jwtUtil.generateToken(request.username())));
+            return Mono.just(new AuthResponse(jwtUtil.generateToken(request.username(), "ADMIN")));
         }
         return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas"));
     }
