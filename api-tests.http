@@ -158,6 +158,23 @@ Authorization: Bearer {{token}}
 ### 7. ELIMINACIÓN
 ### ==========================================
 
-### Eliminar Producto 
+### Eliminar Producto
 DELETE {{baseUrl}}/franquicias/{{fId}}/sucursales/{{sId}}/productos/{{pId}}
 Authorization: Bearer {{token}}
+
+
+### ==========================================
+### 8. USUARIOS (ADMIN ONLY)
+### ==========================================
+
+### Crear usuario WRITE (requiere token ADMIN)
+POST {{baseUrl}}/usuarios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "operador1",
+  "password": "operador123",
+  "email": "operador1@franquicias.com",
+  "role": "WRITE"
+}

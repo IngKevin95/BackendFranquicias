@@ -27,7 +27,7 @@ class SucursalControllerTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        String token = jwtUtil.generateToken("admin");
+        String token = jwtUtil.generateToken("admin", "ADMIN");
         webTestClient = webTestClient.mutate().defaultHeader("Authorization", "Bearer " + token).build();
     }
 

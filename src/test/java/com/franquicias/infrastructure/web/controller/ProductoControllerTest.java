@@ -38,7 +38,7 @@ class ProductoControllerTest extends AbstractIntegrationTest {
     void crearFixtures() {
         franquicia = franquiciaService.crear("Frutería Don Pepe").block();
         sucursal = sucursalService.agregar(franquicia.id(), "Sede Norte").block();
-        String token = jwtUtil.generateToken("admin");
+        String token = jwtUtil.generateToken("admin", "ADMIN");
         webTestClient = webTestClient.mutate().defaultHeader("Authorization", "Bearer " + token).build();
     }
 

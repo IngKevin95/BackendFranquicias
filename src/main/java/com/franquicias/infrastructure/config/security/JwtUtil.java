@@ -13,11 +13,12 @@ public class JwtUtil {
     private final String secret = "franquicias-super-secret-key-1234567890";
     private final SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
 
-    public String generateToken(String username) {
+    public String generateToken(String username, String role) {
         return Jwts.builder()
             .subject(username)
+            .claim("role", role)
             .issuedAt(new Date(System.currentTimeMillis()))
-            .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 horas
+            .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
             .signWith(key)
             .compact();
     }
@@ -32,11 +33,18 @@ public class JwtUtil {
     }
 
     public String extractUsername(String token) {
+        return getClaims(token).getSubject();
+    }
+
+    public String extractRole(String token) {
+        return getClaims(token).get("role", String.class);
+    }
+
+    private Claims getClaims(String token) {
         return Jwts.parser()
             .verifyWith(key)
             .build()
             .parseSignedClaims(token)
-            .getPayload()
-            .getSubject();
+            .getPayload();
     }
 }
