@@ -6,9 +6,11 @@ import com.franquicias.domain.exception.SucursalNotFoundException;
 import com.franquicias.domain.model.Producto;
 import com.franquicias.domain.model.ProductoMaxStock;
 import com.franquicias.domain.model.Sucursal;
+import com.franquicias.domain.model.TransaccionStock;
 import com.franquicias.domain.port.FranquiciaRepositoryPort;
 import com.franquicias.domain.port.ProductoRepositoryPort;
 import com.franquicias.domain.port.SucursalRepositoryPort;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -80,6 +82,18 @@ public class ProductoService {
             .flatMap(producto -> productoPort.updateNombre(productoId, nuevoNombre)
                 .then(invalidarCacheMaxStock(franquiciaId))
                 .then(productoPort.findById(productoId)));
+    }
+
+    public Flux<Producto> listarPorSucursal(UUID franquiciaId, UUID sucursalId) {
+        return sucursalDeFranquicia(franquiciaId, sucursalId)
+            .flatMapMany(sucursal -> productoPort.findBySucursalId(sucursalId));
+    }
+
+    public Flux<TransaccionStock> obtenerKardex(UUID franquiciaId, UUID sucursalId, UUID productoId,
+                                                 LocalDateTime desde, LocalDateTime hasta) {
+        return sucursalDeFranquicia(franquiciaId, sucursalId)
+            .then(productoDeSucursal(sucursalId, productoId))
+            .flatMapMany(producto -> productoPort.findKardex(productoId, desde, hasta));
     }
 
     public Flux<ProductoMaxStock> obtenerMaxStockPorFranquicia(UUID franquiciaId, int limit, int offset) {

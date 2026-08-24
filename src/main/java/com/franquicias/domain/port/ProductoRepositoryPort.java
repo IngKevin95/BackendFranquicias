@@ -2,6 +2,8 @@ package com.franquicias.domain.port;
 
 import com.franquicias.domain.model.Producto;
 import com.franquicias.domain.model.ProductoMaxStock;
+import com.franquicias.domain.model.TransaccionStock;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -14,4 +16,6 @@ public interface ProductoRepositoryPort {
     Mono<Long> updateStockNativo(UUID id, int cantidadCambio);
     Mono<Void> updateNombre(UUID id, String nombre);
     Mono<Void> registrarTransaccionStock(UUID productoId, String tipo, int cantidad, String idempotencyKey);
+    Flux<Producto> findBySucursalId(UUID sucursalId);
+    Flux<TransaccionStock> findKardex(UUID productoId, LocalDateTime desde, LocalDateTime hasta);
 }

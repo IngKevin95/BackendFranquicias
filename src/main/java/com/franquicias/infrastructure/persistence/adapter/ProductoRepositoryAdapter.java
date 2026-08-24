@@ -2,9 +2,11 @@ package com.franquicias.infrastructure.persistence.adapter;
 
 import com.franquicias.domain.model.Producto;
 import com.franquicias.domain.model.ProductoMaxStock;
+import com.franquicias.domain.model.TransaccionStock;
 import com.franquicias.domain.port.ProductoRepositoryPort;
 import com.franquicias.infrastructure.persistence.mapper.ProductoMapper;
 import com.franquicias.infrastructure.persistence.repository.ProductoR2dbcRepository;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
@@ -106,5 +108,35 @@ public class ProductoRepositoryAdapter implements ProductoRepositoryPort {
         }
 
         return sql.then();
+    }
+
+    @Override
+    public Flux<Producto> findBySucursalId(UUID sucursalId) {
+        return repository.findBySucursalId(sucursalId).map(mapper::toDomain);
+    }
+
+    @Override
+    public Flux<TransaccionStock> findKardex(UUID productoId, LocalDateTime desde, LocalDateTime hasta) {
+        String query = """
+            SELECT id, producto_id, tipo, cantidad, fecha_creacion
+            FROM transaccion_stock
+            WHERE producto_id = :productoId
+              AND (:desde::timestamp IS NULL OR fecha_creacion >= :desde)
+              AND (:hasta::timestamp IS NULL OR fecha_creacion <= :hasta)
+            ORDER BY fecha_creacion DESC
+            """;
+        DatabaseClient.GenericExecuteSpec spec = databaseClient.sql(query)
+            .bind("productoId", productoId);
+        spec = (desde != null) ? spec.bind("desde", desde) : spec.bindNull("desde", LocalDateTime.class);
+        spec = (hasta != null) ? spec.bind("hasta", hasta) : spec.bindNull("hasta", LocalDateTime.class);
+
+        return spec
+            .map((row, metadata) -> new TransaccionStock(
+                row.get("id", UUID.class),
+                row.get("producto_id", UUID.class),
+                row.get("tipo", String.class),
+                row.get("cantidad", Integer.class),
+                row.get("fecha_creacion", LocalDateTime.class)))
+            .all();
     }
 }
