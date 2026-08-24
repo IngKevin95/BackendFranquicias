@@ -33,4 +33,4 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          script: sudo /opt/app/infra/deploy.sh ${{ github.head_ref }}
+          script: sudo bash /opt/app/infra/deploy.sh ${{ github.head_ref }}
