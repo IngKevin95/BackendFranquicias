@@ -56,3 +56,21 @@ variable "repo_branch" {
   type        = string
   default     = "develop"
 }
+
+variable "admin_username" {
+  description = "Username del usuario ADMIN sembrado al primer arranque"
+  type        = string
+  default     = "admin"
+}
+
+variable "admin_password" {
+  description = "Password del usuario ADMIN sembrado al primer arranque (sensible, pasar por tfvars o TF_VAR_admin_password)"
+  type        = string
+  sensitive   = true
+}
+
+variable "admin_email" {
+  description = "Email del usuario ADMIN sembrado al primer arranque"
+  type        = string
+  default     = "admin@example.com"
+}

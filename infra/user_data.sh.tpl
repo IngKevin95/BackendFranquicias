@@ -28,4 +28,7 @@ docker run -d --name app --restart unless-stopped \
   -e REDIS_HOST=127.0.0.1 \
   -e REDIS_PORT=6379 \
   -e SERVER_PORT=8080 \
+  -e ADMIN_USERNAME=${admin_username} \
+  -e ADMIN_PASSWORD=${admin_password} \
+  -e ADMIN_EMAIL=${admin_email} \
   franquicias-api:latest
