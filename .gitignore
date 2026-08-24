@@ -35,6 +35,9 @@ replay_pid*
 # VS Code History
 .history/
 
+# Git worktrees
+.worktrees/
+
 # Terraform
 infra/.terraform/
 infra/*.tfstate
