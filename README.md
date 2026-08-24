@@ -43,21 +43,26 @@ Los tests de integración usan Testcontainers (requieren Docker disponible).
 
 ## Funcionalidades Avanzadas
 
+- **Seguridad JWT:** Todos los endpoints están protegidos usando tokens asimétricos (JJWT) validados nativamente con Spring Security WebFlux.
+- **Idempotencia:** El endpoint de Kardex soporta protección contra reintentos por red mediante el header `Idempotency-Key`, evitando actualización duplicada.
+- **Observabilidad:** Integración de Actuator y Micrometer Tracing para exponer métricas a Prometheus e inyectar `[traceId, spanId]` en cada log para seguimiento distribuido.
 - **Caché Distribuida:** Uso de Redis Reactivo para cachear la respuesta pesada de `max-stock`. La caché se invalida automáticamente si ocurre una modificación de inventario.
 - **Kardex y Atomicidad:** Las modificaciones de stock generan un registro histórico inmutable (ENTRADA/SALIDA) y las actualizaciones de inventario se resuelven nativamente en la base de datos (previniendo *race conditions* concurrentes).
 - **Paginación:** Endpoint de reportes soporta `limit` y `offset`.
+- **Swagger Rica:** Todos los controladores están decorados con `@Operation`, `@Tag` y requisitos de Auth Bearer para una exploración interactiva en `/swagger-ui.html`.
 
 ## Endpoints principales
 
 | Método | Path | Descripción |
 |---|---|---|
+| POST | `/api/v1/auth/login` | **NUEVO:** Obtener Token JWT usando `{"username":"admin", "password":"admin123"}` |
 | POST | `/api/v1/franquicias` | Crear franquicia |
 | PATCH | `/api/v1/franquicias/{id}` | Renombrar franquicia |
 | POST | `/api/v1/franquicias/{fId}/sucursales` | Agregar sucursal |
 | PATCH | `/api/v1/franquicias/{fId}/sucursales/{sId}` | Renombrar sucursal |
 | POST | `/api/v1/franquicias/{fId}/sucursales/{sId}/productos` | Agregar producto |
 | DELETE | `/api/v1/franquicias/{fId}/sucursales/{sId}/productos/{pId}` | Eliminar producto |
-| PATCH | `/api/v1/franquicias/{fId}/sucursales/{sId}/productos/{pId}/stock` | Modificar stock (recibe JSON con `tipo` ENTRADA/SALIDA y `cantidad`) |
+| PATCH | `/api/v1/franquicias/{fId}/sucursales/{sId}/productos/{pId}/stock` | Modificar stock (recibe JSON con `tipo` ENTRADA/SALIDA y `cantidad`, acepta header `Idempotency-Key`) |
 | PATCH | `/api/v1/franquicias/{fId}/sucursales/{sId}/productos/{pId}` | Renombrar producto |
 | GET | `/api/v1/franquicias/{fId}/productos/max-stock?limit=10&offset=0` | Producto con más stock por sucursal (paginado) |
 

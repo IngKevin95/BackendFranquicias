@@ -104,12 +104,12 @@ class ProductoServiceTest {
         when(productoPort.findById(productoId))
             .thenReturn(Mono.just(new Producto(productoId, SUCURSAL_ID, "Manzana", 10)));
         when(productoPort.updateStockNativo(productoId, 50)).thenReturn(Mono.just(1L));
-        when(productoPort.registrarTransaccionStock(productoId, "ENTRADA", 50)).thenReturn(Mono.empty());
+        when(productoPort.registrarTransaccionStock(productoId, "ENTRADA", 50, null)).thenReturn(Mono.empty());
         mockRedisDelete();
         when(productoPort.findById(productoId))
             .thenReturn(Mono.just(new Producto(productoId, SUCURSAL_ID, "Manzana", 60)));
 
-        StepVerifier.create(service.modificarStock(FRANQUICIA_ID, SUCURSAL_ID, productoId, "ENTRADA", 50))
+        StepVerifier.create(service.modificarStock(FRANQUICIA_ID, SUCURSAL_ID, productoId, "ENTRADA", 50, null))
             .expectNextMatches(p -> p.stock() == 60)
             .verifyComplete();
     }
@@ -123,7 +123,7 @@ class ProductoServiceTest {
             .thenReturn(Mono.just(new Producto(productoId, SUCURSAL_ID, "Manzana", 10)));
         when(productoPort.updateStockNativo(productoId, -50)).thenReturn(Mono.just(0L)); // 0 filas actualizadas significa que el stock no alcanzó
 
-        StepVerifier.create(service.modificarStock(FRANQUICIA_ID, SUCURSAL_ID, productoId, "SALIDA", 50))
+        StepVerifier.create(service.modificarStock(FRANQUICIA_ID, SUCURSAL_ID, productoId, "SALIDA", 50, null))
             .expectError(IllegalArgumentException.class)
             .verify();
     }
@@ -137,7 +137,7 @@ class ProductoServiceTest {
         when(productoPort.findById(productoId))
             .thenReturn(Mono.just(new Producto(productoId, otraSucursalId, "Manzana", 10)));
 
-        StepVerifier.create(service.modificarStock(FRANQUICIA_ID, SUCURSAL_ID, productoId, "ENTRADA", 50))
+        StepVerifier.create(service.modificarStock(FRANQUICIA_ID, SUCURSAL_ID, productoId, "ENTRADA", 50, null))
             .expectError(ConflictoRelacionException.class)
             .verify();
     }

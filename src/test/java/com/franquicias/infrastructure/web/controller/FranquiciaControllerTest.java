@@ -12,11 +12,22 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import com.franquicias.infrastructure.config.security.JwtUtil;
+import org.junit.jupiter.api.BeforeEach;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class FranquiciaControllerTest extends AbstractIntegrationTest {
 
     @Autowired
     private WebTestClient webTestClient;
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @BeforeEach
+    void setUp() {
+        String token = jwtUtil.generateToken("admin");
+        webTestClient = webTestClient.mutate().defaultHeader("Authorization", "Bearer " + token).build();
+    }
 
     @Test
     void creaUnaFranquiciaYLaRenombra() {
