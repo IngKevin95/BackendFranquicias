@@ -42,7 +42,7 @@ public class SecurityConfig {
     private WebFilter jwtFilter() {
         return (ServerWebExchange exchange, WebFilterChain chain) -> {
             String path = exchange.getRequest().getPath().value();
-            if (path.startsWith("/api/v1/auth") || path.startsWith("/actuator") || path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs")) {
+            if (path.startsWith("/api/v1/auth") || path.startsWith("/actuator") || path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.startsWith("/webjars")) {
                 return chain.filter(exchange);
             }
 
