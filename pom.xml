@@ -13,7 +13,7 @@
 
   <groupId>com.franquicias</groupId>
   <artifactId>franquicias-api</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
   <name>franquicias-api</name>
   <description>API reactiva de franquicias, sucursales y productos</description>
 
