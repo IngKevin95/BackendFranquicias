@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -55,6 +56,38 @@ class FranquiciaServiceTest {
         when(port.findById(id)).thenReturn(Mono.empty());
 
         StepVerifier.create(service.renombrar(id, "Nombre nuevo"))
+            .expectError(FranquiciaNotFoundException.class)
+            .verify();
+    }
+
+    @Test
+    void listaTodasLasFranquicias() {
+        Franquicia f1 = new Franquicia(UUID.randomUUID(), "Frutería Don Pepe");
+        Franquicia f2 = new Franquicia(UUID.randomUUID(), "Panadería La Espiga");
+        when(port.findAll()).thenReturn(Flux.just(f1, f2));
+
+        StepVerifier.create(service.listar())
+            .expectNext(f1)
+            .expectNext(f2)
+            .verifyComplete();
+    }
+
+    @Test
+    void obtieneUnaFranquiciaExistente() {
+        UUID id = UUID.randomUUID();
+        when(port.findById(id)).thenReturn(Mono.just(new Franquicia(id, "Frutería Don Pepe")));
+
+        StepVerifier.create(service.obtener(id))
+            .expectNextMatches(f -> f.id().equals(id))
+            .verifyComplete();
+    }
+
+    @Test
+    void falloAlObtenerUnaFranquiciaQueNoExiste() {
+        UUID id = UUID.randomUUID();
+        when(port.findById(id)).thenReturn(Mono.empty());
+
+        StepVerifier.create(service.obtener(id))
             .expectError(FranquiciaNotFoundException.class)
             .verify();
     }
