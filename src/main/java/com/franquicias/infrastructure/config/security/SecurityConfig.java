@@ -71,10 +71,12 @@ public class SecurityConfig {
                 if (jwtUtil.validateToken(token)) {
                     String username = jwtUtil.extractUsername(token);
                     String role = jwtUtil.extractRole(token);
-                    var authority = new SimpleGrantedAuthority("ROLE_" + role);
-                    var auth = new UsernamePasswordAuthenticationToken(username, null, List.of(authority));
-                    return chain.filter(exchange)
-                        .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
+                    if (role != null) {
+                        var authority = new SimpleGrantedAuthority("ROLE_" + role);
+                        var auth = new UsernamePasswordAuthenticationToken(username, null, List.of(authority));
+                        return chain.filter(exchange)
+                            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
+                    }
                 }
             }
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
