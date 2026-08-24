@@ -295,3 +295,19 @@ Cada PR corre el pipeline de CI (build + 64 tests) antes de poder mergearse.
 - `mvn -B verify` en cada PR hacia `main` o `develop`.
 - Deploy automático a EC2 en PRs hacia `main`.
 - `workflow_dispatch` para deploys manuales de cualquier rama.
+
+## Limitaciones conocidas
+
+- **Secreto JWT hardcodeado**: `JwtUtil` firma los tokens con una clave fija
+  en el código (`franquicias-super-secret-key-1234567890`), no configurable
+  por variable de entorno. Válido para esta prueba técnica; para un uso real
+  en producción habría que externalizarlo (variable de entorno o secret
+  manager) y rotarlo.
+- **Password de seed del admin en el repo** (`admin`/`admin123`, ver
+  `V4__usuarios.sql`): pensado para arrancar rápido en local/demo — cambiar
+  o deshabilitar ese usuario antes de exponer una instancia real.
+- **Expiración de token fija en 10 horas**, sin refresh token: al vencer,
+  hay que loguearse de nuevo.
+- **`ssh_cidr` por defecto en `0.0.0.0/0`** en `terraform.tfvars.example`:
+  abierto a todo internet; restringir a la IP propia si el despliegue deja
+  de ser descartable.
