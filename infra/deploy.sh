@@ -16,7 +16,14 @@ ENV_ARGS=$(docker inspect app --format '{{range .Config.Env}}-e {{.}} {{end}}')
 docker rm -f app
 docker run -d --name app --restart unless-stopped --network host $ENV_ARGS franquicias-api:latest
 
-echo "Deploy listo. Verificando health..."
-sleep 5
-curl -s http://localhost:8080/actuator/health
-echo
+echo "Deploy listo. Esperando a que la app levante..."
+for i in $(seq 1 24); do
+  HEALTH=$(curl -s --max-time 3 http://localhost:8080/actuator/health || true)
+  if echo "$HEALTH" | grep -q '"status":"UP"'; then
+    echo "$HEALTH"
+    exit 0
+  fi
+  sleep 5
+done
+echo "La app no respondio UP a tiempo. Ultimo intento: $HEALTH" >&2
+exit 1
