@@ -1,13 +1,16 @@
 package com.franquicias.infrastructure.config.security;
 
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.server.ServerWebExchange;
@@ -30,9 +33,23 @@ public class SecurityConfig {
         return http
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .authorizeExchange(exchanges -> exchanges
+                // Publicos
                 .pathMatchers("/api/v1/auth/**").permitAll()
                 .pathMatchers("/actuator/**").permitAll()
                 .pathMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/webjars/**").permitAll()
+                // Solo ADMIN
+                .pathMatchers(HttpMethod.POST, "/api/v1/usuarios").hasRole("ADMIN")
+                // WRITE y ADMIN — escritura sobre el catalogo
+                .pathMatchers(HttpMethod.POST, "/api/v1/franquicias").hasAnyRole("WRITE", "ADMIN")
+                .pathMatchers(HttpMethod.PATCH, "/api/v1/franquicias/**").hasAnyRole("WRITE", "ADMIN")
+                .pathMatchers(HttpMethod.POST, "/api/v1/franquicias/*/sucursales").hasAnyRole("WRITE", "ADMIN")
+                .pathMatchers(HttpMethod.PATCH, "/api/v1/franquicias/*/sucursales/**").hasAnyRole("WRITE", "ADMIN")
+                .pathMatchers(HttpMethod.POST, "/api/v1/franquicias/*/sucursales/*/productos").hasAnyRole("WRITE", "ADMIN")
+                .pathMatchers(HttpMethod.PATCH, "/api/v1/franquicias/*/sucursales/*/productos/**").hasAnyRole("WRITE", "ADMIN")
+                .pathMatchers(HttpMethod.DELETE, "/api/v1/franquicias/*/sucursales/*/productos/**").hasAnyRole("WRITE", "ADMIN")
+                // READ, WRITE y ADMIN — consultas
+                .pathMatchers(HttpMethod.GET, "/api/v1/**").hasAnyRole("READ", "WRITE", "ADMIN")
+                // Cualquier otra cosa autenticada
                 .anyExchange().authenticated()
             )
             .addFilterAt(jwtFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
@@ -42,7 +59,9 @@ public class SecurityConfig {
     private WebFilter jwtFilter() {
         return (ServerWebExchange exchange, WebFilterChain chain) -> {
             String path = exchange.getRequest().getPath().value();
-            if (path.startsWith("/api/v1/auth") || path.startsWith("/actuator") || path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.startsWith("/webjars")) {
+            if (path.startsWith("/api/v1/auth") || path.startsWith("/actuator")
+                    || path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs")
+                    || path.startsWith("/webjars")) {
                 return chain.filter(exchange);
             }
 
@@ -51,7 +70,9 @@ public class SecurityConfig {
                 String token = authHeader.substring(7);
                 if (jwtUtil.validateToken(token)) {
                     String username = jwtUtil.extractUsername(token);
-                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(username, null, null);
+                    String role = jwtUtil.extractRole(token);
+                    var authority = new SimpleGrantedAuthority("ROLE_" + role);
+                    var auth = new UsernamePasswordAuthenticationToken(username, null, List.of(authority));
                     return chain.filter(exchange)
                         .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
                 }
