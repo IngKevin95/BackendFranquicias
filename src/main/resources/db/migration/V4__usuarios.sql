@@ -12,11 +12,7 @@ CREATE TABLE usuario (
     CONSTRAINT uq_usuario_email    UNIQUE (email)
 );
 
--- Seed: admin / admin123 con BCrypt factor 10
-INSERT INTO usuario (username, password_hash, email, role)
-VALUES (
-    'admin',
-    '$2b$10$ySC.bb/zB2Jm6765sq1Y6O3xXKPeBJ4tbOMIMD/fO9vgjuVfaFBxe',
-    'admin@franquicias.com',
-    'ADMIN'
-);
+-- El usuario admin inicial ya no se siembra aca (hardcodeado en SQL, igual
+-- para cualquier entorno). Lo siembra AdminUserSeeder al arrancar la app,
+-- leyendo credenciales de variables de entorno (ADMIN_USERNAME/
+-- ADMIN_PASSWORD/ADMIN_EMAIL), para que cada despliegue tenga las suyas.

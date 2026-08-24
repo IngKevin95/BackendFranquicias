@@ -13,6 +13,8 @@ detalle de arquitectura, endpoints y checklist de la prueba técnica, ver
 git clone https://github.com/IngKevin95/BackendFranquicias.git
 cd BackendFranquicias
 cp .env.example .env
+# editar .env: poner ADMIN_USERNAME / ADMIN_PASSWORD / ADMIN_EMAIL propios
+# (son obligatorios, docker compose up falla si faltan)
 docker compose up --build
 ```
 
@@ -20,14 +22,14 @@ docker compose up --build
 - Swagger UI: `http://localhost:8089/swagger-ui.html`
 - Health: `http://localhost:8089/actuator/health`
 
-Login (todo endpoint requiere JWT — no hay acceso sin loguearse primero; las
-credenciales del usuario admin de arranque se comparten por un canal
-aparte, no están en este repo):
+Al primer arranque contra una base vacía, la app siembra un usuario `ADMIN`
+con las credenciales de `ADMIN_USERNAME`/`ADMIN_PASSWORD`/`ADMIN_EMAIL` que
+hayas puesto en `.env` — no hay default en el código. Login:
 
 ```bash
 curl -X POST http://localhost:8089/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"<usuario>","password":"<password>"}'
+  -d '{"username":"<lo-que-pusiste-en-ADMIN_USERNAME>","password":"<lo-que-pusiste-en-ADMIN_PASSWORD>"}'
 ```
 
 Parar todo: `docker compose down`. Parar y borrar los datos de Postgres:
@@ -43,7 +45,8 @@ Levantá solo la base de datos y Redis con Docker, y corré la app con Maven:
 
 ```bash
 docker compose up -d db redis
-DB_PORT=5433 mvn spring-boot:run   # docker-compose mapea Postgres a 5433 en el host
+DB_PORT=5433 ADMIN_USERNAME=admin ADMIN_PASSWORD=<tu-password> ADMIN_EMAIL=admin@example.com \
+  mvn spring-boot:run   # docker-compose mapea Postgres a 5433 en el host
 ```
 
 > `DB_PORT=5433` es necesario porque `docker-compose.yml` expone Postgres en

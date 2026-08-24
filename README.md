@@ -84,12 +84,28 @@ La respuesta trae el token (`{"token": "..."}`), que va en el header
 el rol del usuario (`ADMIN`/`WRITE`/`READ`) como claim, y ese rol es el que
 determina qué endpoints puede usar (ver tabla de [Endpoints](#endpoints)).
 
-La migración `V4__usuarios.sql` siembra un usuario `admin` con rol `ADMIN`
-para poder crear el resto de usuarios desde ahí (`POST /api/v1/usuarios`).
-**Las credenciales de ese usuario no están en este repositorio** — se
-comparten por un canal aparte. Con ese usuario podés loguearte y, si hace
-falta, crear usuarios `WRITE`/`READ` adicionales para dar acceso a otras
-personas sin compartir la cuenta admin.
+### Usuario admin inicial
+
+`AdminUserSeeder` crea un usuario `ADMIN` la primera vez que arranca la app
+contra una base de datos vacía (idempotente: si ya existe un usuario con ese
+username, no hace nada). Las credenciales se leen de tres variables de
+entorno obligatorias — **sin default en el código, y sin valores en el
+repo**: `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `ADMIN_EMAIL`. Si falta alguna,
+la app no arranca.
+
+- **Local con Docker Compose**: van en tu `.env` (copiado de
+  `.env.example`, que no está commiteado — ahí sí les ponés un valor vos).
+  `docker compose up` falla con un mensaje claro si `.env` no las tiene.
+- **AWS/Terraform**: se pasan por `admin_username`/`admin_password`/
+  `admin_email` en `terraform.tfvars` (ver [Despliegue en AWS](#despliegue-en-aws)),
+  que tampoco está commiteado. `admin_password` no tiene default — Terraform
+  obliga a definirlo.
+- Las credenciales reales de cualquier instancia compartida (no tu local) se
+  comunican por un canal aparte.
+
+Con ese usuario te logueás y, si hace falta, creás usuarios `WRITE`/`READ`
+adicionales (`POST /api/v1/usuarios`) para dar acceso a otras personas sin
+compartir la cuenta admin.
 
 ---
 
@@ -316,11 +332,10 @@ Cada PR corre el pipeline de CI (build + 64 tests) antes de poder mergearse.
   por variable de entorno. Válido para esta prueba técnica; para un uso real
   en producción habría que externalizarlo (variable de entorno o secret
   manager) y rotarlo.
-- **Usuario admin sembrado por migración** (ver `V4__usuarios.sql`, hash
-  BCrypt de una password fija): las credenciales no se documentan en este
-  repositorio, se comparten por un canal aparte. Igual, para un despliegue
-  real conviene rotar esa password (o deshabilitar el usuario) apenas se
-  tenga acceso, en vez de depender del seed.
+- **Password del admin en texto plano en `.env`/`terraform.tfvars`**: son
+  archivos no commiteados, pero para un uso real conviene rotar esa password
+  (o deshabilitar el usuario) apenas se tenga acceso, en vez de depender
+  indefinidamente del seed inicial.
 - **Expiración de token fija en 10 horas**, sin refresh token: al vencer,
   hay que loguearse de nuevo.
 - **`ssh_cidr` por defecto en `0.0.0.0/0`** en `terraform.tfvars.example`:

@@ -31,6 +31,9 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       SERVER_PORT: 8080
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?falta ADMIN_USERNAME en .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?falta ADMIN_PASSWORD en .env}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?falta ADMIN_EMAIL en .env}
     ports:
       - "8089:8080"
     depends_on:
